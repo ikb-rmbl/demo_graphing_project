@@ -42,6 +42,10 @@ output/*
 # Keep canonical small inputs by un-ignoring them explicitly, e.g.:
 # !data/raw/site_list.csv
 
+# Quarto render artifacts
+*.html
+analysis_files/libs/
+
 # OS clutter
 .DS_Store
 Thumbs.db
