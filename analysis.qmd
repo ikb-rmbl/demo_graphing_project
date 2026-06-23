@@ -1,0 +1,108 @@
+---
+title: RMBL Climate Graph
+author: Ian Breckheimer
+date: today
+format: html
+---
+
+```{r setup}
+
+library(ggplot2)
+library(dplyr)
+
+setwd("~/code/demo_graphing_project/")
+```
+
+# Question
+
+How has the hydroclimate of the RMBL vicinity changed over the past 8 years?
+
+# Data
+
+The data come from the GridMET dataset (Abatzaglou et al. 2013, https://www.researchgate.net/profile/John-Abatzoglou/publication/236687227_Development_of_gridded_surface_meteorological_data_for_ecological_applications_and_modeling/links/5a563217aca272bb6963c2ce/Development-of-gridded-surface-meteorological-data-for-ecological-applications-and-modeling.pdf).
+
+I extracted values from the 4 km resolution pixel including Gothic using the Climate Engine web interface. The date ranges for deficit are a bit different from the one I sent you so that we could include 2026 on the graph.
+
+Water deficit is computed as (Precipitation - Potential Evapotranspiration), with PET computed with the Hargreaves method.
+
+```{r load-data}
+deficit <- read.csv("./data/raw/ClimateEngine_Apr15_Jun15_Deficit_1979_2026.csv")
+precip <- read.csv("./data/raw/ClimateEngine_Nov1_Apr15_Precip_1979_2026.csv")
+colnames(deficit) <- c("Year","SummerDeficit")
+colnames(precip) <- c("Year","WinterPrecip")
+```
+
+# Approach
+
+I think I need to:
+- Load data
+- Combine the two datasets by year using a left join.
+- Make a graph of Winter Precip vs Summer Deficit, with the years labeled.
+- Do a T test to see if the means of the two time periods are significantly different.
+
+# Analysis
+
+Step 1: Combine the two datasets by year using a left join.
+
+```{r}
+
+combined <- left_join(deficit,precip,by="Year")
+
+mean_ppt_1979_2017 <- mean(combined$WinterPrecip[1:39],na.rm=TRUE)
+mean_deficit_1979_2017 <- mean(combined$SummerDeficit[1:39],na.rm=TRUE)
+means_df <- data.frame(label="Mean 1979-2010",
+                       WinterPrecip=mean_ppt_1979_2017,
+                       SummerDeficit=mean_deficit_1979_2017)
+
+mean_ppt_2018_2026 <- mean(combined$WinterPrecip[40:48],na.rm=TRUE)
+mean_deficit_2018_2026 <- mean(combined$SummerDeficit[40:48],na.rm=TRUE)
+current_df <- data.frame(label="Mean 2018-2024",
+                       WinterPrecip=mean_ppt_2018_2026,
+                       SummerDeficit=mean_deficit_2018_2026)
+
+hist_years <- filter(combined,Year < 2018)
+cur_years <- filter(combined,Year >= 2018)
+```
+
+Step 2: Make a graph
+
+```{r}
+p1 <- ggplot(combined)+
+  geom_text(aes(label=Year,x=WinterPrecip,y=SummerDeficit),hjust=0,vjust=0,data=hist_years,color="grey80",
+            size=4) +
+  geom_point(aes(x=WinterPrecip,y=SummerDeficit),size=3,data=means_df,color="grey80") +
+  geom_point(aes(x=WinterPrecip,y=SummerDeficit),size=3,data=current_df,color="black") +
+  geom_segment(aes(x=mean_ppt_1979_2017,y=mean_deficit_1979_2017,
+                   xend=mean_ppt_2018_2026,yend=mean_deficit_2018_2026),
+               color="red",arrow = grid::arrow(),lwd=1.5)+
+  labs(title="Winter Precip vs Spring Water Deficit",
+       x="Nov. 1 - May 1 Precip. (mm, water year)",
+       y="Apr. 15 - Jun. 15 PPT - Et0 (mm, calendar year)") + 
+  geom_text(aes(label=Year,x=WinterPrecip,y=SummerDeficit),hjust=0,vjust=0,data=cur_years,
+            color="black",
+            size=4) +
+  theme_bw()
+print(p1)
+```
+
+Step 3: Export graph to PDF
+```{r}
+pdf("./output/WinterPrecip_vs_SummerDeficit_2026_small.pdf",width=6.5,height=6)
+print(p1)
+dev.off()
+```
+
+Step 4: Perform a statistical test to see if the means of the two time periods are significantly different.
+```{r}
+```
+
+# Findings
+
+<!-- What did you learn? In your own words. -->
+
+---
+
+<!-- AI-use note (see handbook/04-documenting-ai-use.md):
+     Briefly, how did the assistant help on this analysis? e.g.
+     "AI helped debug a CRS mismatch and suggested the group_by/summarise structure;
+      I wrote the plan and verified the output against the 2022 field counts." -->
