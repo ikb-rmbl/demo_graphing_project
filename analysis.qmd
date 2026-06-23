@@ -44,7 +44,7 @@ I think I need to:
 
 Step 1: Combine the two datasets by year using a left join.
 
-```{r}
+```{r reshape-data}
 
 combined <- left_join(deficit,precip,by="Year")
 
@@ -66,7 +66,7 @@ cur_years <- filter(combined,Year >= 2018)
 
 Step 2: Make a graph
 
-```{r}
+```{r make-graph}
 p1 <- ggplot(combined)+
   geom_text(aes(label=Year,x=WinterPrecip,y=SummerDeficit),hjust=0,vjust=0,data=hist_years,color="grey80",
             size=4) +
@@ -82,18 +82,18 @@ p1 <- ggplot(combined)+
             color="black",
             size=4) +
   theme_bw()
-print(p1)
+p1
 ```
 
 Step 3: Export graph to PDF
-```{r}
+```{r export-pdf}
 pdf("./output/WinterPrecip_vs_SummerDeficit_2026_small.pdf",width=6.5,height=6)
 print(p1)
 dev.off()
 ```
 
 Step 4: Perform a statistical test to see if the means of the two time periods are significantly different.
-```{r}
+```{r statistical-tests}
 ```
 
 # Findings
